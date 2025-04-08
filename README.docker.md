@@ -1,14 +1,5 @@
 # SPUG Docker 一键部署
 
-本项目提供了 SPUG 的 Docker 一键部署方案，让您可以轻松地在任何支持 Docker 的环境中部署 SPUG。
-
-## 系统要求
-
-- 操作系统：任何支持 Docker 的 Linux 系统（推荐 Ubuntu 20.04+ 或 CentOS 7+）
-- 内存：至少 2GB RAM
-- 磁盘空间：至少 10GB 可用空间
-- 网络：能够访问互联网（用于下载 Docker 镜像）
-
 ## 快速开始
 
 ### 一键部署
@@ -16,12 +7,7 @@
 只需运行以下命令即可完成部署：
 
 ```bash
-# 克隆代码仓库（如果使用 Git）
-git clone https://your-repository-url.git
-cd your-repository-name
-
-# 或者，如果您已经下载了代码
-cd path/to/your/code
+# 克隆代码仓库
 
 # 运行一键部署脚本
 sudo bash deploy.sh
@@ -29,7 +15,7 @@ sudo bash deploy.sh
 
 ### 手动部署
 
-如果您想手动控制部署过程，可以按照以下步骤操作：
+如果想手动控制部署过程，可以按照以下步骤操作：
 
 1. 安装 Docker 和 Docker Compose：
    ```bash
@@ -143,20 +129,7 @@ backend:
     - REDIS_PASSWORD=your_redis_password
 ```
 
-## 常见问题
 
-### 端口被占用
-
-如果 80 或 8000 端口已被占用，您可以修改 `docker/.env` 文件中的端口配置。
-
-### 容器启动失败
-
-检查日志以获取详细错误信息：
-
-```bash
-cd docker
-docker-compose logs
-```
 
 ### 数据持久化
 
@@ -167,12 +140,6 @@ docker-compose logs
 - spug-logs：日志文件
 - spug-repos：代码仓库
 
-## 安全建议
-
-1. 修改默认管理员密码
-2. 使用 HTTPS 保护前端和 API 通信
-3. 限制服务器防火墙，只开放必要端口
-4. 定期备份数据
 
 ## 支持与反馈
 
