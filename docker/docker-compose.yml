@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    container_name: spug-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    networks:
+      - spug-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: spug-backend
+    restart: unless-stopped
+    volumes:
+      - spug-db:/app/db.sqlite3
+      - spug-storage:/app/storage
+      - spug-logs:/app/logs
+      - spug-repos:/app/repos
+    environment:
+      - TZ=Asia/Shanghai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      - redis
+    networks:
+      - spug-network
+
+  # Redis 服务
+  redis:
+    image: redis:6-alpine
+    container_name: spug-redis
+    restart: unless-stopped
+    command: >
+      --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis-data:/data
+    networks:
+      - spug-network
+
+  # 监控服务
+  monitor:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: spug-monitor
+    restart: unless-stopped
+    command: python manage.py runmonitor
+    volumes:
+      - spug-db:/app/db.sqlite3
+      - spug-storage:/app/storage
+      - spug-logs:/app/logs
+    environment:
+      - TZ=Asia/Shanghai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - spug-network
+
+  # 调度服务
+  scheduler:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: spug-scheduler
+    restart: unless-stopped
+    command: python manage.py runscheduler
+    volumes:
+      - spug-db:/app/db.sqlite3
+      - spug-storage:/app/storage
+      - spug-logs:/app/logs
+    environment:
+      - TZ=Asia/Shanghai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - spug-network
+
+  # 工作进程
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: spug-worker
+    restart: unless-stopped
+    command: python manage.py runworker
+    volumes:
+      - spug-db:/app/db.sqlite3
+      - spug-storage:/app/storage
+      - spug-logs:/app/logs
+    environment:
+      - TZ=Asia/Shanghai
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - spug-network
+
+# 网络配置
+networks:
+  spug-network:
+    driver: bridge
+
+# 数据卷配置
+volumes:
+  spug-db:
+    name: spug-db
+  spug-storage:
+    name: spug-storage
+  spug-logs:
+    name: spug-logs
+  spug-repos:
+    name: spug-repos
+  redis-data:
+    name: spug-redis-data
