@@ -26,12 +26,36 @@ if [ "$(id -u)" != "0" ]; then
     error "此脚本需要以 root 权限运行，请使用 sudo 或切换到 root 用户"
 fi
 
-# 检查操作系统
+# 检查操作系统和架构
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     OS=$ID
     VERSION=$VERSION_ID
-    info "检测到操作系统: $OS $VERSION"
+
+    # 检测架构
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64)
+            ARCH="amd64"
+            ;;
+        aarch64)
+            ARCH="arm64"
+            ;;
+        armv7l)
+            ARCH="armv7"
+            ;;
+        *)
+            warn "未知架构: $ARCH，将尝试使用 amd64"
+            ARCH="amd64"
+            ;;
+    esac
+
+    info "检测到操作系统: $OS $VERSION ($ARCH)"
+
+    # 对 Ubuntu 系统进行特殊处理
+    if [ "$OS" = "ubuntu" ]; then
+        info "检测到 Ubuntu 系统，将使用 Ubuntu 专用配置"
+    fi
 else
     error "无法检测操作系统类型"
 fi
@@ -44,12 +68,21 @@ install_docker() {
         warn "Docker 已安装，跳过安装步骤"
     else
         case $OS in
-            ubuntu|debian)
+            ubuntu)
                 apt-get update
                 apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
                 # 使用清华源安装Docker
                 curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/$OS/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-                echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/$OS $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+                echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/$OS $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+                apt-get update
+                apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+                ;;
+            debian)
+                apt-get update
+                apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+                # 使用清华源安装Docker
+                curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/$OS/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+                echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/$OS $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
                 apt-get update
                 apt-get install -y docker-ce docker-ce-cli containerd.io
                 ;;
