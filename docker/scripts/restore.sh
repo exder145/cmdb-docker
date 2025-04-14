@@ -43,61 +43,75 @@ check_docker() {
             error "Docker 启动失败，请检查 Docker 服务"
         fi
     fi
+
+    # 检查 Docker Compose 是否安装（支持插件模式和独立模式）
+    if ! (docker compose version &> /dev/null || command -v docker-compose &> /dev/null); then
+        error "Docker Compose 未安装，请先运行 './install.sh' 安装 Docker Compose"
+    fi
+
+    # 判断使用哪种命令格式
+    if docker compose version &> /dev/null; then
+        DOCKER_COMPOSE="docker compose"
+        info "使用 Docker Compose 插件模式"
+    else
+        DOCKER_COMPOSE="docker-compose"
+        info "使用 Docker Compose 独立模式"
+    fi
 }
 
 # 解压备份文件
 extract_backup() {
     info "解压备份文件..."
-    
+
     # 创建临时目录
     TEMP_DIR=$(mktemp -d)
-    
+
     # 解压备份文件
     tar -xzf $BACKUP_FILE -C $TEMP_DIR
-    
+
     # 获取备份目录名
     BACKUP_DIR=$(find $TEMP_DIR -type d -name "20*" | head -1)
-    
+
     if [ -z "$BACKUP_DIR" ]; then
         rm -rf $TEMP_DIR
         error "无法找到有效的备份目录"
     fi
-    
+
     info "备份文件解压到: $BACKUP_DIR"
 }
 
 # 停止容器
 stop_containers() {
     info "停止当前容器..."
-    docker-compose down
+    $DOCKER_COMPOSE down
 }
 
 # 恢复数据
 restore_data() {
     info "恢复数据..."
-    
+
     # 启动后端容器
-    docker-compose up -d backend
-    
+    $DOCKER_COMPOSE up -d backend
+
     # 等待容器启动
     info "等待容器启动..."
     sleep 10
-    
+
     # 检查后端容器是否运行
-    if ! docker-compose ps | grep -q "spug-backend.*Up"; then
+    if ! $DOCKER_COMPOSE ps | grep -q "spug-backend.*Up"; then
         error "后端容器未正常运行，无法恢复数据"
     fi
-    
+
     # 恢复数据库
     info "恢复数据库..."
-    docker cp $BACKUP_DIR/db_backup.sql $(docker-compose ps -q backend):/app/
-    docker-compose exec -T backend bash -c "sqlite3 db.sqlite3 < /app/db_backup.sql"
-    
+    docker cp $BACKUP_DIR/db_backup.sql $($DOCKER_COMPOSE ps -q backend):/app/
+    $DOCKER_COMPOSE exec -T backend bash -c "sqlite3 db.sqlite3 < /app/db_backup.sql"
+
     # 恢复上传的文件
     info "恢复上传的文件..."
-    docker-compose exec -T backend rm -rf /app/storage
-    docker cp $BACKUP_DIR/storage $(docker-compose ps -q backend):/app/
-    
+    $DOCKER_COMPOSE exec -T backend rm -rf /app/storage
+    docker cp $BACKUP_DIR/storage $($DOCKER_COMPOSE ps -q backend):/app/
+
     # 恢复配置文件（可选）
     if [ -f "$BACKUP_DIR/.env" ]; then
         info "恢复配置文件..."
@@ -108,8 +122,8 @@ restore_data() {
 # 启动所有容器
 start_containers() {
     info "启动所有容器..."
-    docker-compose up -d
-    
+    $DOCKER_COMPOSE up -d
+
     # 等待容器启动
     info "等待容器启动..."
     sleep 10
@@ -124,7 +138,7 @@ cleanup() {
 # 显示恢复信息
 show_restore_info() {
     FRONTEND_PORT=$(grep FRONTEND_PORT .env | cut -d= -f2 || echo 80)
-    
+
     echo ""
     info "SPUG 数据恢复完成！"
     echo ""
@@ -132,7 +146,7 @@ show_restore_info() {
     echo "  http://$(hostname -I | awk '{print $1}'):$FRONTEND_PORT"
     echo ""
     info "如需查看日志，请运行:"
-    echo "  docker-compose logs -f"
+    echo "  $DOCKER_COMPOSE logs -f"
     echo ""
 }
 
@@ -140,9 +154,9 @@ show_restore_info() {
 main() {
     # 切换到 docker 目录
     cd "$(dirname "$0")/.."
-    
+
     info "开始恢复 SPUG 应用数据..."
-    
+
     check_docker
     extract_backup
     stop_containers

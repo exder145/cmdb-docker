@@ -22,8 +22,10 @@ services:
       dockerfile: docker/backend.Dockerfile
     container_name: spug-backend
     restart: unless-stopped
+    ports:
+      - "8000:8000"
     volumes:
-      - spug-db:/app/db.sqlite3
+      - ../spug_api/db.sqlite3:/app/db.sqlite3:delegated
       - spug-storage:/app/storage
       - spug-logs:/app/logs
       - spug-repos:/app/repos
@@ -39,7 +41,7 @@ services:
 
   # Redis 服务
   redis:
-    image: redis:6-alpine
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/redis:7.0.14
     container_name: spug-redis
     restart: unless-stopped
     command: >
@@ -58,7 +60,7 @@ services:
     restart: unless-stopped
     command: python manage.py runmonitor
     volumes:
-      - spug-db:/app/db.sqlite3
+      - ../spug_api/db.sqlite3:/app/db.sqlite3:delegated
       - spug-storage:/app/storage
       - spug-logs:/app/logs
     environment:
@@ -81,7 +83,7 @@ services:
     restart: unless-stopped
     command: python manage.py runscheduler
     volumes:
-      - spug-db:/app/db.sqlite3
+      - ../spug_api/db.sqlite3:/app/db.sqlite3:delegated
       - spug-storage:/app/storage
       - spug-logs:/app/logs
     environment:
@@ -104,7 +106,7 @@ services:
     restart: unless-stopped
     command: python manage.py runworker
     volumes:
-      - spug-db:/app/db.sqlite3
+      - ../spug_api/db.sqlite3:/app/db.sqlite3:delegated
       - spug-storage:/app/storage
       - spug-logs:/app/logs
     environment:
@@ -125,8 +127,6 @@ networks:
 
 # 数据卷配置
 volumes:
-  spug-db:
-    name: spug-db
   spug-storage:
     name: spug-storage
   spug-logs:
