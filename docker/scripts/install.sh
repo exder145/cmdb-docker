@@ -39,7 +39,7 @@ fi
 # 安装 Docker
 install_docker() {
     info "开始安装 Docker..."
-    
+
     if command -v docker &> /dev/null; then
         warn "Docker 已安装，跳过安装步骤"
     else
@@ -61,7 +61,7 @@ install_docker() {
                 error "不支持的操作系统: $OS"
                 ;;
         esac
-        
+
         # 启动 Docker
         systemctl enable docker
         systemctl start docker
@@ -72,7 +72,7 @@ install_docker() {
 # 安装 Docker Compose
 install_docker_compose() {
     info "开始安装 Docker Compose..."
-    
+
     if command -v docker-compose &> /dev/null; then
         warn "Docker Compose 已安装，跳过安装步骤"
     else
@@ -87,7 +87,7 @@ install_docker_compose() {
 # 安装依赖工具
 install_dependencies() {
     info "安装依赖工具..."
-    
+
     case $OS in
         ubuntu|debian)
             apt-get update
@@ -100,22 +100,22 @@ install_dependencies() {
             error "不支持的操作系统: $OS"
             ;;
     esac
-    
+
     info "依赖工具安装完成"
 }
 
 # 主函数
 main() {
     info "开始安装 SPUG 部署环境..."
-    
+
     install_dependencies
     install_docker
     install_docker_compose
-    
+
     # 验证安装
     docker --version
     docker-compose --version
-    
+
     info "SPUG 部署环境安装完成！"
     info "请运行 './deploy.sh' 开始部署应用"
 }

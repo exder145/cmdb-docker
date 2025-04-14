@@ -36,26 +36,26 @@ check_docker() {
 # 备份数据
 backup_data() {
     info "备份当前数据..."
-    
+
     # 创建备份目录
     BACKUP_DIR="../backups/$(date +%Y%m%d_%H%M%S)"
     mkdir -p $BACKUP_DIR
-    
+
     # 备份数据库
     info "备份数据库..."
     docker-compose exec -T backend sqlite3 db.sqlite3 .dump > $BACKUP_DIR/db_backup.sql
-    
+
     # 备份上传的文件
     info "备份上传的文件..."
     docker cp $(docker-compose ps -q backend):/app/storage $BACKUP_DIR/
-    
+
     info "备份完成，文件保存在: $BACKUP_DIR"
 }
 
 # 更新容器
 update_containers() {
     info "更新容器..."
-    
+
     # 拉取最新代码（如果使用 Git）
     if [ -d ../.git ]; then
         info "检测到 Git 仓库，拉取最新代码..."
@@ -63,13 +63,13 @@ update_containers() {
         git pull
         cd docker
     fi
-    
+
     # 停止并移除旧容器
     docker-compose down
-    
+
     # 构建并启动新容器
     docker-compose up -d --build
-    
+
     # 等待容器启动
     info "等待容器启动..."
     sleep 10
@@ -78,12 +78,12 @@ update_containers() {
 # 更新数据库
 update_database() {
     info "更新数据库..."
-    
+
     # 检查后端容器是否运行
     if ! docker-compose ps | grep -q "spug-backend.*Up"; then
         error "后端容器未正常运行，请检查日志"
     fi
-    
+
     # 运行数据库迁移
     docker-compose exec -T backend python manage.py updatedb
 }
@@ -91,10 +91,10 @@ update_database() {
 # 检查服务状态
 check_services() {
     info "检查服务状态..."
-    
+
     # 获取容器状态
     docker-compose ps
-    
+
     # 检查前端是否可访问
     FRONTEND_PORT=$(grep FRONTEND_PORT .env | cut -d= -f2 || echo 80)
     if curl -s -o /dev/null -w "%{http_code}" http://localhost:$FRONTEND_PORT/ | grep -q "200\|301\|302"; then
@@ -102,7 +102,7 @@ check_services() {
     else
         warn "前端服务可能未正常运行，请检查日志"
     fi
-    
+
     # 检查后端是否可访问
     BACKEND_PORT=$(grep BACKEND_PORT .env | cut -d= -f2 || echo 8000)
     if curl -s -o /dev/null -w "%{http_code}" http://localhost:$BACKEND_PORT/account/login/ | grep -q "200\|301\|302"; then
@@ -115,7 +115,7 @@ check_services() {
 # 显示更新信息
 show_info() {
     FRONTEND_PORT=$(grep FRONTEND_PORT .env | cut -d= -f2 || echo 80)
-    
+
     echo ""
     info "SPUG 更新完成！"
     echo ""
@@ -131,9 +131,9 @@ show_info() {
 main() {
     # 切换到 docker 目录
     cd "$(dirname "$0")/.."
-    
+
     info "开始更新 SPUG 应用..."
-    
+
     check_docker
     backup_data
     update_containers
