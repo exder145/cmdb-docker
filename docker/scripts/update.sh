@@ -57,11 +57,19 @@ backup_data() {
 
     # 备份数据库
     info "备份数据库..."
+<<<<<<< HEAD
     $DOCKER_COMPOSE exec -T backend sqlite3 db.sqlite3 .dump > $BACKUP_DIR/db_backup.sql
 
     # 备份上传的文件
     info "备份上传的文件..."
     docker cp $($DOCKER_COMPOSE ps -q backend):/app/storage $BACKUP_DIR/
+=======
+    docker-compose exec -T backend sqlite3 db.sqlite3 .dump > $BACKUP_DIR/db_backup.sql
+
+    # 备份上传的文件
+    info "备份上传的文件..."
+    docker cp $(docker-compose ps -q backend):/app/storage $BACKUP_DIR/
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     info "备份完成，文件保存在: $BACKUP_DIR"
 }
@@ -79,10 +87,17 @@ update_containers() {
     fi
 
     # 停止并移除旧容器
+<<<<<<< HEAD
     $DOCKER_COMPOSE down
 
     # 构建并启动新容器
     $DOCKER_COMPOSE up -d --build
+=======
+    docker-compose down
+
+    # 构建并启动新容器
+    docker-compose up -d --build
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     # 等待容器启动
     info "等待容器启动..."
@@ -107,7 +122,11 @@ check_services() {
     info "检查服务状态..."
 
     # 获取容器状态
+<<<<<<< HEAD
     $DOCKER_COMPOSE ps
+=======
+    docker-compose ps
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     # 检查前端是否可访问
     FRONTEND_PORT=$(grep FRONTEND_PORT .env | cut -d= -f2 || echo 80)

@@ -91,7 +91,11 @@ restore_data() {
     info "恢复数据..."
 
     # 启动后端容器
+<<<<<<< HEAD
     $DOCKER_COMPOSE up -d backend
+=======
+    docker-compose up -d backend
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     # 等待容器启动
     info "等待容器启动..."
@@ -104,6 +108,7 @@ restore_data() {
 
     # 恢复数据库
     info "恢复数据库..."
+<<<<<<< HEAD
     docker cp $BACKUP_DIR/db_backup.sql $($DOCKER_COMPOSE ps -q backend):/app/
     $DOCKER_COMPOSE exec -T backend bash -c "sqlite3 db.sqlite3 < /app/db_backup.sql"
 
@@ -111,6 +116,15 @@ restore_data() {
     info "恢复上传的文件..."
     $DOCKER_COMPOSE exec -T backend rm -rf /app/storage
     docker cp $BACKUP_DIR/storage $($DOCKER_COMPOSE ps -q backend):/app/
+=======
+    docker cp $BACKUP_DIR/db_backup.sql $(docker-compose ps -q backend):/app/
+    docker-compose exec -T backend bash -c "sqlite3 db.sqlite3 < /app/db_backup.sql"
+
+    # 恢复上传的文件
+    info "恢复上传的文件..."
+    docker-compose exec -T backend rm -rf /app/storage
+    docker cp $BACKUP_DIR/storage $(docker-compose ps -q backend):/app/
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     # 恢复配置文件（可选）
     if [ -f "$BACKUP_DIR/.env" ]; then
@@ -122,7 +136,11 @@ restore_data() {
 # 启动所有容器
 start_containers() {
     info "启动所有容器..."
+<<<<<<< HEAD
     $DOCKER_COMPOSE up -d
+=======
+    docker-compose up -d
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     # 等待容器启动
     info "等待容器启动..."

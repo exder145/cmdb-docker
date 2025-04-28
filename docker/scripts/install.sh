@@ -107,10 +107,17 @@ install_docker() {
 
 # 安装 Docker Compose 插件
 install_docker_compose() {
+<<<<<<< HEAD
     info "开始安装 Docker Compose 插件..."
 
     if docker compose version &> /dev/null; then
         warn "Docker Compose 插件已安装，跳过安装步骤"
+=======
+    info "开始安装 Docker Compose..."
+
+    if command -v docker-compose &> /dev/null; then
+        warn "Docker Compose 已安装，跳过安装步骤"
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
     else
         case $OS in
             ubuntu|debian)
@@ -172,7 +179,11 @@ main() {
 
     # 验证安装
     docker --version
+<<<<<<< HEAD
     docker compose version || docker-compose --version
+=======
+    docker-compose --version
+>>>>>>> 6bcbe8bf843ed564402aa8b772bede61b4d951fe
 
     info "SPUG 部署环境安装完成！"
     info "请运行 './deploy.sh' 开始部署应用"
